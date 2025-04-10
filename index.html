@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaAssist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8fafc;
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        /* Mobile app styling */
+        .app-container {
+            max-width: 100%;
+            overflow-x: hidden;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin: 0 auto;
+        }
+        .statusbar {
+            background: #f8f8f8;
+            border-top: 1px solid #e0e0e0;
+        }
+        .profile-circle {
+            transition: all 0.3s ease;
+        }
+        .profile-circle:active {
+            transform: scale(0.95);
+        }
+        .card {
+            transition: transform 0.2s ease;
+        }
+        .card:active {
+            transform: scale(0.98);
+        }
+        .btn-action {
+            transition: all 0.2s ease;
+        }
+        .btn-action:active {
+            transform: scale(0.95);
+        }
+        
+        /* Custom scrollbar for mobile experience */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+    <div class="app-container bg-white min-h-screen pb-16 relative">
+        <div id="loginContainer" class="px-4 py-10">
+            <div class="max-w-md mx-auto">
+                <div class="text-center mb-8">
+                    <i class="bi bi-capsule-pill text-blue-600 text-5xl mb-2"></i>
+                    <h1 class="text-3xl font-bold text-gray-800">PharmaAssist</h1>
+                    <p class="text-gray-600 mt-2">Your healthcare assistant</p>
+                </div>
+                <div class="bg-white rounded-xl shadow-md p-6 space-y-5">
+                    <div>
+                        <label for="userType" class="block text-sm font-medium text-gray-700 mb-1">User Type</label>
+                        <select id="userType" class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-800">
+                            <option value="">Select User Type</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="patient">Patient</option>
+                            <option value="mr">Medical Representative</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="loginId" class="block text-sm font-medium text-gray-700 mb-1">Login ID</label>
+                        <input type="text" id="loginId" placeholder="Enter your login ID" class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <div class="relative">
+                            <input type="password" id="password" placeholder="Enter your password" class="w-full p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+                            <button id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button onclick="login()" class="w-full bg-blue-600 text-white p-3.5 rounded-lg hover:bg-blue-700 transition-colors font-medium btn-action">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="dashboard" class="hidden">
+            <!-- Dashboard content will be dynamically inserted here -->
+        </div>
+        
+        <!-- Profile Modal -->
+        <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white w-11/12 max-w-md rounded-xl p-5 relative">
+                <button onclick="closeProfile()" class="absolute right-4 top-4 text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x-lg text-xl"></i>
+                </button>
+                <div id="profileContent" class="pt-6">
+                    <!-- Profile content will be dynamically inserted -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Prescription Modal -->
+        <div id="prescriptionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white w-11/12 max-w-md rounded-xl p-5 relative">
+                <button onclick="closePrescription()" class="absolute right-4 top-4 text-gray-500 hover:text-gray-700">
+                    <i class="bi bi-x-lg text-xl"></i>
+                </button>
+                <h3 class="text-xl font-semibold mb-4">Add Prescription</h3>
+                <div class="space-y-4">
+                    <textarea id="notesArea" class="w-full p-3 border rounded-lg" rows="4" placeholder="Add your medical notes here..."></textarea>
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                        <i class="bi bi-image text-3xl text-gray-400"></i>
+                        <p class="text-gray-500 mt-2">Upload prescription image</p>
+                        <button class="mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg text-sm">Select Image</button>
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="savePrescription()" class="bg-green-500 text-white px-6 py-2 rounded-lg btn-action">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentPatient = null;
+
+        // Dummy data with expanded information
+        const users = {
+            doctor: { 
+                id: 'doc1', 
+                password: 'doc123', 
+                name: 'Dr. Smith', 
+                specialty: 'Cardiology',
+                experience: '15 years',
+                email: 'dr.smith@pharmaassist.com',
+                phone: '+1 (555) 123-4567',
+                appointments: [],
+                profileImage: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&w=300'
+            },
+            patient: { 
+                id: 'pat1', 
+                password: 'pat123', 
+                name: 'John Doe',
+                age: 35,
+                email: 'john.doe@example.com',
+                phone: '+1 (555) 987-6543',
+                medicalHistory: 'No chronic conditions',
+                profileImage: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&w=300'
+            },
+            mr: { 
+                id: 'mr1', 
+                password: 'mr123', 
+                name: 'Mike Johnson',
+                company: 'MediPharma Inc.',
+                territory: 'Northeast Region',
+                email: 'mike.johnson@medipharma.com',
+                phone: '+1 (555) 456-7890',
+                profileImage: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&w=300'
+            },
+            admin: { 
+                id: 'admin1', 
+                password: 'admin123', 
+                name: 'Admin User',
+                role: 'System Administrator',
+                email: 'admin@pharmaassist.com',
+                phone: '+1 (555) 321-0987',
+                profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&w=300'
+            }
+        };
+
+        // Dummy doctor data
+        const doctors = [
+            { 
+                id: 'doc1',
+                name: 'Dr. Sarah Wilson', 
+                specialty: 'Neurology',
+                rating: 4.8,
+                experience: '12 years',
+                availability: 'Mon-Fri, 9AM-5PM',
+                image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&w=300'
+            },
+            { 
+                id: 'doc2',
+                name: 'Dr. James Roberts', 
+                specialty: 'Orthopedics',
+                rating: 4.7,
+                experience: '15 years',
+                availability: 'Tue-Sat, 10AM-6PM',
+                image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&w=300'
+            },
+            { 
+                id: 'doc3',
+                name: 'Dr. Emily Chan', 
+                specialty: 'Cardiology',
+                rating: 4.9,
+                experience: '10 years',
+                availability: 'Mon-Wed, 8AM-4PM',
+                image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&h=300&w=300'
+            }
+        ];
+
+        // Dummy appointment data
+        const appointments = [
+            {
+                patientName: 'Sarah Johnson',
+                patientId: 'pat2',
+                doctorId: 'doc1',
+                date: '2024-01-20 10:00 AM',
+                status: 'pending',
+                reason: 'Regular check-up',
+                id: 'apt1'
+            },
+            {
+                patientName: 'Michael Brown',
+                patientId: 'pat3',
+                doctorId: 'doc1',
+                date: '2024-01-19 2:30 PM',
+                status: 'accepted',
+                reason: 'Follow-up consultation',
+                notes: '',
+                id: 'apt2'
+            }
+        ];
+
+        // Dummy meetings data
+        const meetings = [
+            {
+                title: 'Medical Board Meeting',
+                date: '2024-01-21 11:00 AM',
+                location: 'Conference Room A',
+                attendees: ['Dr. Smith', 'Dr. Wilson', 'Hospital Director']
+            }
+        ];
+
+        // Services offered
+        const services = [
+            { name: 'Neurology', icon: 'bi-brain', doctors: ['doc1'] },
+            { name: 'Orthopedics', icon: 'bi-bandaid', doctors: ['doc2'] },
+            { name: 'Cardiology', icon: 'bi-heart-pulse', doctors: ['doc3', 'doc1'] },
+            { name: 'Urology', icon: 'bi-droplet', doctors: [] },
+            { name: 'Psychology', icon: 'bi-people', doctors: [] }
+        ];
+
+        // MR messages
+        const mrMessages = [
+            {
+                sender: 'mr1',
+                receiver: 'doc1',
+                message: 'Recommending new antibiotics series for treatment.',
+                timestamp: '2024-01-19 10:30 AM'
+            },
+            {
+                sender: 'doc1',
+                receiver: 'mr1',
+                message: 'Thank you for the recommendation. Will review and get back.',
+                timestamp: '2024-01-19 11:00 AM'
+            }
+        ];
+
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordField = document.getElementById('password');
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+        });
+
+        function login() {
+            const userType = document.getElementById('userType').value;
+            const loginId = document.getElementById('loginId').value;
+            const password = document.getElementById('password').value;
+
+            if (!userType || !loginId || !password) {
+                showToast('Please fill in all fields');
+                return;
+            }
+
+            if (users[userType]?.id === loginId && users[userType]?.password === password) {
+                currentUser = {...users[userType], type: userType};
+                document.getElementById('loginContainer').classList.add('hidden');
+                showDashboard(userType);
+            } else {
+                showToast('Invalid credentials!');
+            }
+        }
+
+        function showDashboard(userType) {
+            const dashboard = document.getElementById('dashboard');
+            dashboard.classList.remove('hidden');
+
+            let content = '';
+            switch(userType) {
+                case 'doctor':
+                    content = getDoctorDashboard();
+                    break;
+                case 'patient':
+                    content = getPatientDashboard();
+                    break;
+                case 'mr':
+                    content = getMRDashboard();
+                    break;
+                case 'admin':
+                    content = getAdminDashboard();
+                    break;
+            }
+            dashboard.innerHTML = content;
+        }
+
+        function getDoctorDashboard() {
+            // Filter appointments for this doctor
+            const pendingAppointments = appointments.filter(a => a.doctorId === currentUser.id && a.status === 'pending');
+            const acceptedAppointments = appointments.filter(a => a.doctorId === currentUser.id && a.status === 'accepted');
+
+            return `
+                <div class="pb-16">
+                    <div class="p-4 bg-blue-50">
+                        <div class="flex items-center gap-4">
+                            <img src="${currentUser.profileImage}" 
+                                class="w-16 h-16 rounded-full object-cover border-2 border-blue-400 profile-circle" 
+                                onclick="showProfile('doctor')"
+                                alt="Doctor profile">
+                            <div>
+                                <h2 class="text-2xl font-semibold text-gray-800">Welcome, ${currentUser.name}!</h2>
+                                <p class="text-blue-600">${currentUser.specialty}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 space-y-6">
+                        <!-- Appointment Requests -->
+                        <div class="bg-white rounded-xl shadow-sm p-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold">Appointment Requests</h3>
+                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">${pendingAppointments.length}</span>
+                            </div>
+                            <div class="space-y-3" id="appointmentRequests">
+                                ${pendingAppointments.length > 0 ? pendingAppointments.map(apt => `
+                                    <div class="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                        <div>
+                                            <p class="font-medium">${apt.patientName}</p>
+                                            <p class="text-sm text-gray-600"><i class="bi bi-calendar3 mr-1"></i> ${apt.date}</p>
+                                            <p class="text-sm text-gray-600 mt-1"><i class="bi bi-info-circle mr-1"></i> ${apt.reason}</p>
+                                        </div>
+                                        <div class="flex justify-end gap-2 mt-3">
+                                            <button onclick="updateAppointment('${apt.id}', 'accepted')" class="bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm btn-action">Accept</button>
+                                            <button onclick="updateAppointment('${apt.id}', 'rejected')" class="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm btn-action">Reject</button>
+                                        </div>
+                                    </div>
+                                `).join('') : '<p class="text-gray-500 text-center py-4">No pending appointment requests</p>'}
+                            </div>
+                        </div>
+
+                        <!-- Accepted Appointments -->
+                        <div class="bg-white rounded-xl shadow-sm p-4">
+                            <h3 class="text-lg font-semibold mb-4">Accepted Appointments</h3>
+                            <div class="space-y-3">
+                                ${acceptedAppointments.length > 0 ? acceptedAppointments.map(apt => `
+                                    <div class="p-3 border border-gray-200 rounded-lg">
+                                        <div>
+                                            <p class="font-medium">${apt.patientName}</p>
+                                            <p class="text-sm text-gray-600"><i class="bi bi-calendar3 mr-1"></i> ${apt.date}</p>
+                                            <p class="text-sm text-gray-600 mt-1"><i class="bi bi-info-circle mr-1"></i> ${apt.reason}</p>
+                                        </div>
+                                        <button onclick="addPrescription('${apt.id}')" class="mt-2 text-blue-500 flex items-center text-sm">
+                                            <i class="bi bi-file-earmark-medical mr-1"></i> Add Notes/Prescription
+                                        </button>
+                                    </div>
+                                `).join('') : '<p class="text-gray-500 text-center py-4">No accepted appointments</p>'}
+                            </div>
+                        </div>
+
+                        <!-- Scheduled Meetings -->
+                        <div class="bg-white rounded-xl shadow-sm p-4">
+                            <h3 class="text-lg font-semibold mb-4">Scheduled Meetings</h3>
+                            <div class="space-y-3">
+                                ${meetings.length > 0 ? meetings.map(meeting => `
+                                    <div class="p-3 border border-gray-200 rounded-lg">
+                                        <p class="font-medium">${meeting.title}</p>
+                                        <p class="text-sm text-gray-600"><i class="bi bi-calendar3 mr-1"></i> ${meeting.date}</p>
+                                        <p class="text-sm text-gray-600 mt-1"><i class="bi bi-geo-alt mr-1"></i> ${meeting.location}</p>
+                                        <div class="mt-2 flex flex-wrap gap-1">
+                                            ${meeting.attendees.map(attendee => 
+                                                `<span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">${attendee}</span>`
+                                            ).join('')}
+                                        </div>
+                                    </div>
+                                `).join('') : '<p class="text-gray-500 text-center py-4">No scheduled meetings</p>'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Navigation Bar -->
+                    <div class="fixed bottom-0 left-0 right-0 statusbar">
+                        <div class="flex justify-around py-3">
+                            <button class="flex flex-col items-center text-blue-600">
+                                <i class="bi bi-house-door-fill text-2xl"></i>
+                                <span class="text-xs mt-1">Home</span>
+                            </button>
+                            <button class="flex flex-col items-center text-gray-500">
+                                <i class="bi bi-calendar-week text-2xl"></i>
+                                <span class="text-xs mt-1">Calendar</span>
+                            </button>
+                            <button onclick="logout()" class="flex flex-col items-center text-gray-500">
+                                <i class="bi bi-box-arrow-right text-2xl"></i>
+                                <span class="text-xs mt-1">Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getPatientDashboard() {
+            return `
+                <div class="pb-16">
+                    <div class="p-4 bg-blue-50">
+                        <div class="flex items-center gap-4">
+                            <img src="${currentUser.profileImage}" 
+                                class="w-16 h-16 rounded-full object-cover border-2 border-blue-400 profile-circle" 
+                                onclick="showProfile('patient')"
+                                alt="Patient profile">
+                            <div>
+                                <h2 class="text-2xl font-semibold text-gray-800">Welcome, ${currentUser.name}!</h2>
+                                <p class="text-blue-600">Patient</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 space-y-6">
+                        <!-- Our Services -->
+                        <div class="bg-white rounded-xl shadow-sm p-4">
+                            <h3 class="text-lg font-semibold mb-4">Our Services</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                ${services.map(service => `
+                                    <div onclick="showDoctorsByService('${service.name}')" class="p-4 border border-gray-200 rounded-lg text-center card hover:bg-blue-50">
+                                        <i class="bi ${service.icon} text-2xl text-blue-500"></i>
+                                        <p class="mt-2 text-sm font-medium">${service.name}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Doctor Listings (Default: Top Doctors) -->
+                        <div id="doctorListingsContainer" class="bg-white rounded-xl shadow-sm p-4">
+                            <h3 class="text-lg font-semibold mb-4">Top Doctors</h3>
+                            <div class="space-y-3" id="doctorListings">
+                                ${doctors.map(doctor => `
+                                    <div class="p-3 border border-gray-200 rounded-lg flex items-start gap-3">
+                                        <img src="${doctor.image}" class="w-14 h-14 rounded-full object-cover" alt="${doctor.name}">
+                                        <div class="flex-1">
+                                            <p class="font-medium">${doctor.name}</p>
+                                            <p class="text-sm text-gray-600">${doctor.specialty}</p>
+                                            <div class="flex items-center mt-1">
+                                                <i class="bi bi-star-fill text-yellow-400 mr-1 text-xs"></i>
+                                                <span class="text-sm">${doctor.rating}</span>
+                                                <span class="text-xs text-gray-500 ml-2">${doctor.experience}</span>
+                                            </div>
+                                            <button onclick="bookAppointment('${doctor.id}')" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm btn-action">
+                                                Book Appointment
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Navigation Bar -->
+                    <div class="fixed bottom-0 left-0 right-0 statusbar">
+                        <div class="flex justify-around py-3">
+                            <button class="flex flex-col items-center text-blue-600">
+                                <i class="bi bi-house-door-fill text-2xl"></i>
+                                <span class="text-xs mt-1">Home</span>
+                            </button>
+                            <button class="flex flex-col items-center text-gray-500">
+                                <i class="bi bi-calendar-week text-2xl"></i>
+                                <span class="text-xs mt-1">Calendar</span>
+                            </button>
+                            <button onclick="logout()" class="flex flex-col items-center text-gray-500">
+                                <i class="bi bi-box-arrow-right text-2xl"></i>
+                                <span class="text-xs mt-1">Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getMRDashboard() {
+            // Get messages for the current MR
+            const filteredMessages = mrMessages.filter(msg => msg.sender === currentUser.id || msg.receiver === currentUser.id);
+            
+            return `
+                <div class="pb-16">
+                    <div class="p-4 bg-blue-50">
+                        <div class="flex items-center gap-4">
+                            <img src="${currentUser.profileImage}" 
+                                class="w-16 h-16 rounded-full object-cover border-2 border-blue-400 profile-circle" 
+                                onclick="showProfile('mr')"
+                                alt="MR profile">
+                            <div>
+                                <h2 class="text-2xl font-semibold text-gray-800">Welcome, ${currentUser.name}!</h2>
+                                <p class="text-blue-600">${currentUser.company}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 space-y-6">
+                        <!-- Message Center -->
+                        <div class="bg-white rounded-xl shadow-sm p-4">
+                            <h3 class="text-lg font-semibold mb-4">Message Center</h3>
+                            
+                            <!-- Message Composer -->
+                            <div class="p-3 border border-gray-200 rounded-lg mb-4">
+                                <div class="mb-2">
+                                    <select id="messageReceiver" class="w-full p-2.5 border border-gray-300 rounded-lg mb-2 bg-gray-50 text-sm">
+                                        <option value="">Select Doctor</option>
+                                        ${doctors.map(doc => `<option value="${doc.id}">${doc.name}</option>`).join('')}
+                                    </select>
+                                    <textarea id="messageText" class="w-full p-3 border border-gray-300 rounded-lg text-sm" rows="3" placeholder="Write your medication recommendation..."></textarea>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button onclick="sendMessage()" class="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm btn-action">
+                                        <i class="bi bi-send mr-1"></i> Send
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Message Thread -->
+                            <div class="space-y-3">
+                                <h4 class="font-medium">Recent Conversations</h4>
+                                <div class="space-y-3 max-h-96 overflow-y-auto">
+                                    ${filteredMessages.length > 0 ? filteredMessages.map(msg => `
+                                        <div class="${msg.sender === currentUser.id ? 'bg-blue-50 ml-8' : 'bg-gray-50 mr-8'} p-3 rounded-lg">
+                                            <p class="font-medium">${msg.sender === currentUser.id ? 'You' : 'Dr. Smith'}</p>
+                                            <p class="text-sm">${msg.message}</p>
+                                            <p class="text-xs text-gray-500 mt-1">${msg.timestamp}</p>
+                                        </div>
+                                    `).join('') : '<p class="text-gray-500 text-center py-4">No messages yet</p>'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Navigation Bar -->
+                    <div class="fixed bottom-0 left-0 right-0 statusbar">
+                        <div class="flex justify-around py-3">
+                            <button class="flex flex-col items-center text-blue-600">
+                                <i class="bi bi-house-door-fill text-2xl"></i>
+                                <span class="text-xs mt-1">Home</span>
+                            </button>
+                            <button onclick="logout()" class="flex flex-col items-center text-gray-500">
+                                <i class="bi bi-box-arrow-right text-2xl"></i>
+                                <span class="text-xs mt-1">Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getAdminDashboard() {
+            return `
+                <div class="pb-16">
+                    <div class="p-4 bg-blue-50">
+                        <div class="flex items-center gap-4">
+                            <img src="${currentUser.profileImage}" 
+                                class="w-16 h-16 rounded-full object-cover border-2 border-blue-400 profile-circle" 
+                                onclick="showProfile('admin')"
+                                alt="Admin profile">
+                            <div>
+                                <h2 class="text-2xl font-semibold text-gray-800">Welcome, ${currentUser.name}!</h2>
+                                <p class="text-blue-600">${currentUser.role}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 space-y-6">
+                        <!-- Control Panel -->
+                        <div class="bg-white rounded-xl shadow-sm p-4">
+                            <h3 class="text-lg font-semibold mb-4">Admin Control Panel</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- User Management -->
+                                <div class="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                    <h4 class="text-md font-medium mb-3">User Management</h4>
+                                    <div class="space-y-2">
+                                        <button class="w-full bg-blue-500 text-white p-2 rounded-lg btn-action flex items-center justify-center">
+                                            <i class="bi bi-people mr-2"></i>Manage Doctors
+                                        </button>
+                                        <button class="w-full bg-blue-500 text-white p-2 rounded-lg btn-action flex items-center justify-center">
+                                            <i class="bi bi-person-vcard mr-2"></i>Manage Patients
+                                        </button>
+                                        <button class="w-full bg-blue-500 text-white p-2 rounded-lg btn-action flex items-center justify-center">
+                                            <i class="bi bi-briefcase mr-2"></i>Manage MRs
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Appointment Management -->
+                                <div class="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                    <h4 class="text-md font-medium mb-3">Appointment Management</h4>
+                                    <div class="space-y-2">
+                                        <button class="w-full bg-green-500 text-white p-2 rounded-lg btn-action flex items-center justify-center">
+                                            <i class="bi bi-list-ul mr-2"></i>View All Appointments
+                                        </button>
+                                        <button onclick="showScheduleAppointmentForm()" class="w-full bg-green-500 text-white p-2 rounded-lg btn-action flex items-center justify-center">
+                                            <i class="bi bi-calendar-plus mr-2"></i>Schedule Appointment
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Reports -->
+                                <div class="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                    <h4 class="text-md font-medium mb-3">Reports</h4>
+                                    <div class="space-y-2">
+                                        <button class="w-full bg-purple-500 text-white p-2 rounded-lg btn-action flex items-center justify-center">
+                                            <i class="bi bi-file-earmark-text mr-2"></i>Generate Reports
+                                        </button>
+                                        <button class="w-full bg-purple-500 text-white p-2 rounded-lg btn-action flex items-center justify-center">
+                                            <i class="bi bi-bar-chart mr-2"></i>View Statistics
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- System Settings -->
+                                <div class="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                                    <h4 class="text-md font-medium mb-3">System Settings</h4>
+                                    <div class="space-y-2">
+                                        <button class="w-full bg-gray-600 text-white p-2 rounded-lg btn-action flex items-center justify-center">
+                                            <i class="bi bi-gear mr-2"></i>General Settings
+                                        </button>
+                                        <button class="w-full bg-gray-600 text-white p-2 rounded-lg btn-action flex items-center justify-center">
+                                            <i class="bi bi-shield-lock mr-2"></i>Security Settings
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Access -->
+                        <div id="quickAccessPanel" class="hidden bg-white rounded-xl shadow-sm p-4">
+                            <!-- Content will be added dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Bottom Navigation Bar -->
+                    <div class="fixed bottom-0 left-0 right-0 statusbar">
+                        <div class="flex justify-around py-3">
+                            <button class="flex flex-col items-center text-blue-600">
+                                <i class="bi bi-house-door-fill text-2xl"></i>
+                                <span class="text-xs mt-1">Home</span>
+                            </button>
+                            <button onclick="logout()" class="flex flex-col items-center text-gray-500">
+                                <i class="bi bi-box-arrow-right text-2xl"></i>
+                                <span class="text-xs mt-1">Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showProfile(userType) {
+            const profileModal = document.getElementById('profileModal');
+            const profileContent = document.getElementById('profileContent');
+            
+            let content = '';
+            
+            switch(userType) {
+                case 'doctor':
+                    content = `
+                        <div class="text-center mb-4">
+                            <img src="${currentUser.profileImage}" class="w-24 h-24 rounded-full mx-auto object-cover" alt="Doctor profile">
+                            <h3 class="text-xl font-semibold mt-2">${currentUser.name}</h3>
+                            <p class="text-blue-600">${currentUser.specialty}</p>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <i class="bi bi-envelope text-gray-500 w-8"></i>
+                                <p>${currentUser.email}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bi bi-telephone text-gray-500 w-8"></i>
+                                <p>${currentUser.phone}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bi bi-briefcase text-gray-500 w-8"></i>
+                                <p>Experience: ${currentUser.experience}</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <button class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg btn-action" onclick="closeProfile()">Close</button>
+                        </div>
+                    `;
+                    break;
+                case 'patient':
+                    content = `
+                        <div class="text-center mb-4">
+                            <img src="${currentUser.profileImage}" class="w-24 h-24 rounded-full mx-auto object-cover" alt="Patient profile">
+                            <h3 class="text-xl font-semibold mt-2">${currentUser.name}</h3>
+                            <p class="text-gray-600">Patient ID: ${currentUser.id}</p>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <i class="bi bi-person text-gray-500 w-8"></i>
+                                <p>Age: ${currentUser.age}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bi bi-envelope text-gray-500 w-8"></i>
+                                <p>${currentUser.email}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bi bi-telephone text-gray-500 w-8"></i>
+                                <p>${currentUser.phone}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bi bi-clipboard2-pulse text-gray-500 w-8"></i>
+                                <p>Medical History: ${currentUser.medicalHistory}</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <button class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg btn-action" onclick="closeProfile()">Close</button>
+                        </div>
+                    `;
+                    break;
+                case 'mr':
+                    content = `
+                        <div class="text-center mb-4">
+                            <img src="${currentUser.profileImage}" class="w-24 h-24 rounded-full mx-auto object-cover" alt="MR profile">
+                            <h3 class="text-xl font-semibold mt-2">${currentUser.name}</h3>
+                            <p class="text-blue-600">${currentUser.company}</p>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <i class="bi bi-geo-alt text-gray-500 w-8"></i>
+                                <p>Territory: ${currentUser.territory}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bi bi-envelope text-gray-500 w-8"></i>
+                                <p>${currentUser.email}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bi bi-telephone text-gray-500 w-8"></i>
+                                <p>${currentUser.phone}</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <button class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg btn-action" onclick="closeProfile()">Close</button>
+                        </div>
+                    `;
+                    break;
+                case 'admin':
+                    content = `
+                        <div class="text-center mb-4">
+                            <img src="${currentUser.profileImage}" class="w-24 h-24 rounded-full mx-auto object-cover" alt="Admin profile">
+                            <h3 class="text-xl font-semibold mt-2">${currentUser.name}</h3>
+                            <p class="text-blue-600">${currentUser.role}</p>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <i class="bi bi-envelope text-gray-500 w-8"></i>
+                                <p>${currentUser.email}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="bi bi-telephone text-gray-500 w-8"></i>
+                                <p>${currentUser.phone}</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end">
+                            <button class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg btn-action" onclick="closeProfile()">Close</button>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            profileContent.innerHTML = content;
+            profileModal.classList.remove('hidden');
+        }
+
+        function closeProfile() {
+            document.getElementById('profileModal').classList.add('hidden');
+        }
+
+        function showDoctorsByService(serviceName) {
+            const service = services.find(s => s.name === serviceName);
+            if (!service) return;
+            
+            const serviceDocIds = service.doctors;
+            const serviceDocsList = serviceDocIds.map(id => doctors.find(d => d.id === id)).filter(Boolean);
+            
+            const doctorListings = document.getElementById('doctorListings');
+            const doctorListingsContainer = document.getElementById('doctorListingsContainer');
+            
+            doctorListingsContainer.querySelector('h3').textContent = `${serviceName} Specialists`;
+            
+            let content = '';
+            if (serviceDocsList.length > 0) {
+                content = serviceDocsList.map(doctor => `
+                    <div class="p-3 border border-gray-200 rounded-lg flex items-start gap-3">
+                        <img src="${doctor.image}" class="w-14 h-14 rounded-full object-cover" alt="${doctor.name}">
+                        <div class="flex-1">
+                            <p class="font-medium">${doctor.name}</p>
+                            <p class="text-sm text-gray-600">${doctor.specialty}</p>
+                            <div class="flex items-center mt-1">
+                                <i class="bi bi-star-fill text-yellow-400 mr-1 text-xs"></i>
+                                <span class="text-sm">${doctor.rating}</span>
+                                <span class="text-xs text-gray-500 ml-2">${doctor.experience}</span>
+                            </div>
+                            <button onclick="bookAppointment('${doctor.id}')" class="mt-2 bg-blue-500 text-white px-3 py-1 rounded-lg text-sm btn-action">
+                                Book Appointment
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                content = `<p class="text-gray-500 text-center py-4">No doctors available for ${serviceName} at the moment</p>`;
+            }
+            
+            doctorListings.innerHTML = content;
+        }
+
+        function bookAppointment(doctorId) {
+            const doctor = doctors.find(d => d.id === doctorId);
+            if (!doctor) return;
+            
+            // In a real app, this would open a form to select date and time
+            const appointmentDate = new Date();
+            appointmentDate.setDate(appointmentDate.getDate() + 3);
+            const formattedDate = `${appointmentDate.getFullYear()}-${String(appointmentDate.getMonth() + 1).padStart(2, '0')}-${String(appointmentDate.getDate()).padStart(2, '0')} 10:00 AM`;
+            
+            // Create new appointment
+            const newAppointmentId = `apt${appointments.length + 1}`;
+            const newAppointment = {
+                patientName: currentUser.name,
+                patientId: currentUser.id,
+                doctorId: doctorId,
+                date: formattedDate,
+                status: 'pending',
+                reason: 'Consultation',
+                id: newAppointmentId
+            };
+            
+            appointments.push(newAppointment);
+            showToast(`Appointment requested with ${doctor.name} for ${formattedDate}`);
+        }
+
+        function updateAppointment(appointmentId, status) {
+            const appointmentIndex = appointments.findIndex(a => a.id === appointmentId);
+            if (appointmentIndex !== -1) {
+                appointments[appointmentIndex].status = status;
+                showDashboard(currentUser.type);
+                showToast(`Appointment ${status}`);
+            }
+        }
+
+        function addPrescription(appointmentId) {
+            currentPatient = appointments.find(a => a.id === appointmentId);
+            if (!currentPatient) return;
+            
+            document.getElementById('prescriptionModal').classList.remove('hidden');
+        }
+
+        function closePrescription() {
+            document.getElementById('prescriptionModal').classList.add('hidden');
+            currentPatient = null;
+        }
+
+        function savePrescription() {
+            if (!currentPatient) return;
+            
+            const notes = document.getElementById('notesArea').value;
+            
+            // In a real app, this would also handle the prescription image
+            const appointmentIndex = appointments.findIndex(a => a.id === currentPatient.id);
+            if (appointmentIndex !== -1) {
+                appointments[appointmentIndex].notes = notes;
+                showToast('Prescription saved successfully');
+                closePrescription();
+            }
+        }
+
+        function sendMessage() {
+            const receiverId = document.getElementById('messageReceiver').value;
+            const messageText = document.getElementById('messageText').value;
+            
+            if (!receiverId || !messageText) {
+                showToast('Please select a doctor and enter your message');
+                return;
+            }
+            
+            // Create new message
+            const now = new Date();
+            const formattedTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+            
+            const newMessage = {
+                sender: currentUser.id,
+                receiver: receiverId,
+                message: messageText,
+                timestamp: formattedTime
+            };
+            
+            mrMessages.push(newMessage);
+            document.getElementById('messageText').value = '';
+            showDashboard('mr');
+            showToast('Message sent successfully');
+        }
+
+        function showScheduleAppointmentForm() {
+            const quickAccessPanel = document.getElementById('quickAccessPanel');
+            
+            quickAccessPanel.innerHTML = `
+                <h3 class="text-lg font-semibold mb-4">Schedule Appointment</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Patient</label>
+                        <select id="patientSelect" class="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50">
+                            <option value="">Select Patient</option>
+                            <option value="pat1">John Doe</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Doctor</label>
+                        <select id="doctorSelect" class="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50">
+                            <option value="">Select Doctor</option>
+                            ${doctors.map(doc => `<option value="${doc.id}">${doc.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
+                        <input type="datetime-local" id="appointmentDateTime" class="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+                        <input type="text" id="appointmentReason" placeholder="Reason for appointment" class="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50">
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="document.getElementById('quickAccessPanel').classList.add('hidden')" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg btn-action">
+                            Cancel
+                        </button>
+                        <button onclick="createAppointment()" class="bg-green-500 text-white px-4 py-2 rounded-lg btn-action">
+                            Schedule
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            quickAccessPanel.classList.remove('hidden');
+        }
+
+        function createAppointment() {
+            const patientId = document.getElementById('patientSelect').value;
+            const doctorId = document.getElementById('doctorSelect').value;
+            const dateTime = document.getElementById('appointmentDateTime').value;
+            const reason = document.getElementById('appointmentReason').value;
+            
+            if (!patientId || !doctorId || !dateTime || !reason) {
+                showToast('Please fill in all fields');
+                return;
+            }
+            
+            // Format the date
+            const date = new Date(dateTime);
+            const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')} ${date.getHours() >= 12 ? 'PM' : 'AM'}`;
+            
+            // Create new appointment
+            const newAppointmentId = `apt${appointments.length + 1}`;
+            const newAppointment = {
+                patientName: 'John Doe', // In a real app, this would be retrieved from the patient data
+                patientId: patientId,
+                doctorId: doctorId,
+                date: formattedDate,
+                status: 'pending',
+                reason: reason,
+                id: newAppointmentId
+            };
+            
+            appointments.push(newAppointment);
+            document.getElementById('quickAccessPanel').classList.add('hidden');
+            showToast('Appointment scheduled successfully');
+        }
+
+        function showToast(message) {
+            // Create toast element if it doesn't exist
+            if (!document.getElementById('toast')) {
+                const toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300 z-50';
+                document.body.appendChild(toast);
+            }
+            
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('loginContainer').classList.remove('hidden');
+            document.getElementById('userType').value = '';
+            document.getElementById('loginId').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('togglePassword').innerHTML = '<i class="bi bi-eye"></i>';
+        }
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
